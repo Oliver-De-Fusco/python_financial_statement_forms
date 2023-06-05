@@ -8,5 +8,5 @@ report_list = [filename for filename in os.listdir(".")
 for x in report_list:
     try:
         os.rename(x, f"{randint(0,10000)}.pdf")
-    except FileExistsError:
+    except FileExistsError:  # Yes, this condition was met
         os.rename(x, f"{randint(10001,100000)}.pdf")

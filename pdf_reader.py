@@ -6,13 +6,19 @@ from pypdf import PdfReader
 
 
 def document_text_processor(document_path):
+    """Returns the text on the first page of a pdf file
+
+    append to errors list in document manually if words are spelt incorrectly, use form (error, correction)
+    """
 
     reader = PdfReader(document_path)
 
     # extract first page of the generator function
     for index, page in enumerate(reader.pages):
-        if index == 0:
-            text = page.extract_text()
+
+        text = page.extract_text()
+
+        if text:
             break
 
     # clean up
@@ -24,7 +30,7 @@ def document_text_processor(document_path):
     # we copy text for the error loop as we cannot edit strings as we use them
     output_text = text.copy()[:200]
 
-    # I gave up so just add error to this list
+    # add errors to this list
     # use form (error, correction)
     error_list = [("Decembe", "December")]
     for error in error_list:
@@ -36,10 +42,11 @@ def document_text_processor(document_path):
 
 
 def find_quater_report(text):
+    """Returns the Datetime object of the report. Returns None if nothing is found
 
-    # All the forms begin with a dated period in format -> MONTH DAY YEAR
-    # By finding the index of the first mention of month we can find the rest of the date by offset values
-    # Loop becuase index can only find a single value at any time
+    This works becuase of form "MM DD YYYY", finding the month first means we have also found the day and year by adding an offset
+    """
+
     MONTHS = ("January", "February", "March", "April", "May", "June",
               "July", "August", "September", "October", "November", "December")
 
@@ -51,35 +58,41 @@ def find_quater_report(text):
     if not month_found:
         return None
 
-    # while this alternative code does work it is bad practice to have 11 errors for each input
-    # for month in MONTHS:
-    #     try:
-    #         month_found = text.index(month)
-    #     except ValueError:
-    #         continue
-
-    # post processing
-
-    # Year date can contain other letters such as Or as a result of the previous processing
-
+    # Year or Day can contain other substrings when they should be only numbers
     for char in printable.replace(digits, ""):
+        text[month_found+1] = text[month_found+1].lower().replace(char, "")
         text[month_found+2] = text[month_found+2].lower().replace(char, "")
 
+    # month found could contain digits when only letters should be present
+    for digit in digits:
+        text[month_found] = text[month_found].replace(digit, "")
+
     year = int(text[month_found+2])
+    # Adding one to month as lists begin at zero but months begin at one
     month = MONTHS.index(text[month_found]) + 1
     day = int(text[month_found+1])
 
-    # Returns a datetime object to manipulate easier
     return date(int(year), month, day)
 
 
 def find_company_name(text):
+    """Attempts to find company name on form.
+
+    This is likely to not be accurate. Jpmorgan for example is one it has trouble with
+
+    Becuase of this it is best to run a cleanup script after to fix the errors by replacing them with the actual name
+
+    If you already know the documents have the same company name this step can be skipped and the company name can be set manually
+    """
 
     company_name_location_start, company_name_location_end = 0, 0
 
     for index, word in enumerate(text):
-        if "Number" in word:
-            company_name_location_start = index
+
+        for substring in ("Number", "No"):
+            if substring in word:
+                company_name_location_start = index
+                break
 
         if "Exact" in word:
             company_name_location_end = index
@@ -93,22 +106,35 @@ def find_company_name(text):
                         2: company_name_location_end]
 
     # add a space between the words
+
+
     output_name = [company_name[0]]
 
     for index, word in enumerate(company_name):
-        if (index) % 2 == 0:
-            # print(word)
+        if index % 2 == 0:
             output_name.append(" ")
+
         else:
             output_name.append(word)
 
-    # remove any white space
-    output_name = "".join(output_name).strip()
+    # remove any white space and underscores
+    output_name = "".join(output_name)
+    output_name = output_name.replace("_", "")
+
     return " ".join(output_name.split())
 
 
 class document:
-    def __init__(self, name, path=os.getcwd()):
+    def __init__(self, name, path=os.getcwd(), company=None, report_type=None, date=None):
+        """Initialise the document object
+
+        Variables:
+        name        : Current filename of the document
+        path        : Where the file is located and is based on name.
+        company     : Can be set manually otherwise will be automatically found.
+        report_type : Optional for manually setting the form type.
+        date        : Optional for manually setting date of the object
+        """
 
         self.name = name
         self.directory = path
@@ -123,11 +149,23 @@ class document:
         document_text = document_text_processor(name)
 
         # data
-        self.company = find_company_name(document_text)
-        self.report_type = document.find_report_type(document_text)
-        self.date_ended = find_quater_report(document_text)
+        if company:
+            self.company = company
+        else:
+            self.company = find_company_name(document_text)
+
+        if report_type:
+            self.report_type = report_type
+        else:
+            self.report_type = document.find_report_type(document_text)
+
+        if date:
+            self.date_ended = date
+        else:
+            self.date_ended = find_quater_report(document_text)
 
     def find_report_type(text):
+        """Retuns report type"""
 
         report_type = ("10-K", "10-Q")
         for word in text:
@@ -136,6 +174,7 @@ class document:
         return None
 
     def set_name(self, name, log=False):
+        """Renames the object"""
 
         # Safety net
         if name[:-4] != ".pdf":
@@ -150,15 +189,17 @@ class document:
 
         return True
 
-    def move_file(self, destination, log=False):
-        os.rename(self.path, os.path.join(destination, self.name))
-        self.directory = destination
+    def move_file(self, destination_folder, log=False):
+        """Moves file to another location, used for folder creation"""
+
+        self.directory = destination_folder
+        os.rename(self.path, os.path.join(destination_folder, self.name))
 
         if log:
-            print(f"{self.path} -> {os.path.join(destination, self.name)}")
+            print(f"{self.path} -> {os.path.join(destination_folder, self.name)}")
 
     def __repr__(self) -> str:
         return f"document(name={repr(self.name)}, date_ended={repr(self.date_ended)})"
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name} - {self.report_type}"
