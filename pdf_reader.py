@@ -14,7 +14,7 @@ def document_text_processor(document_path):
     reader = PdfReader(document_path)
 
     # extract first page of the generator function
-    for index, page in enumerate(reader.pages):
+    for page in reader.pages:
 
         text = page.extract_text()
 
@@ -42,6 +42,7 @@ def document_text_processor(document_path):
 
 
 def find_quater_report(text):
+
     """Returns the Datetime object of the report. Returns None if nothing is found
 
     This works becuase of form "MM DD YYYY", finding the month first means we have also found the day and year by adding an offset
@@ -53,7 +54,9 @@ def find_quater_report(text):
     month_found = None
     for index, word in enumerate(text):
         if word in MONTHS:
+            
             month_found = index
+            break
 
     if not month_found:
         return None
@@ -107,7 +110,7 @@ def find_company_name(text):
 
     # add a space between the words
 
-
+    print(company_name)
     output_name = [company_name[0]]
 
     for index, word in enumerate(company_name):
@@ -117,11 +120,13 @@ def find_company_name(text):
         else:
             output_name.append(word)
 
+
     # remove any white space and underscores
     output_name = "".join(output_name)
     output_name = output_name.replace("_", "")
 
-    return " ".join(output_name.split())
+
+    return " ".join(str(output_name).split()).strip()
 
 
 class document:

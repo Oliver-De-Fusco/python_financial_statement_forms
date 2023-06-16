@@ -114,7 +114,7 @@ def rename_report_files(input_files, generator):
 if __name__ == "__main__":
 
     # get the pdf files in current directory
-    report_list = [document(filename,company="Jpmorgan Chase") for filename in os.listdir(".")
+    report_list = [document(filename) for filename in os.listdir(".")
                    if os.path.isfile(filename) if filename[-4:] == ".pdf"]
 
     # remove files from list that data was not able to be found for
