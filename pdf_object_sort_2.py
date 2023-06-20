@@ -13,7 +13,6 @@ def expected_seqeunce(start, end):
 
     while expected[-1] < end:
 
-        # you have to specify "months" not "month" otherwise the initial month will become January
         next_month = expected[-1] + relativedelta(months=3)
         expected.append(next_month)
 
@@ -61,7 +60,7 @@ def fill_missing_gaps(input_list, expected_list, fill_value=None):
     """Returns a list based on the expected list where any missing dates are filled."""
 
     # we only care about comparing years and months so remove days
-    input_dates = list(truncate_day(x.date_ended) for x in report_list)
+    input_dates = list(truncate_day(report.date_ended) for report in input_list)
 
     # By comparing the expected vs actual
     # we know when to insert a new value into the original list by looping over it
@@ -136,5 +135,5 @@ if __name__ == "__main__":
     # generator has to be able to cycle through a sequence
     generator = cycle(("Annual Report", "Q1", "Q2", "Q3"))
 
-    # sort the files with the names
+    # rename the files with the names
     rename_report_files(report_list, generator)

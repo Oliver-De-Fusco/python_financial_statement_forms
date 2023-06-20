@@ -126,26 +126,25 @@ def find_company_name(text):
 
 
 class document:
-    def __init__(self, name, path=os.getcwd(), company=None, report_type=None, date=None):
+    def __init__(self, name, directory=os.getcwd(), company=None, report_type=None, date=None):
         """Initialise the document object
 
-        Input Variables:
+        Variables:
         name        : Current filename of the document
-        path        : Full path of the document, excluding name when creating a document() object.
+        directory   : The current folder the pdf is in.
         company     : Can be set manually otherwise will be automatically found.
         report_type : Optional for manually setting the form type.
         date        : Optional for manually setting date of the object
         """
 
         self.name = name
-        self.directory = path
+        self.directory = directory
 
-        # File location
-        for root, dirs, files in os.walk(path):
+        # Exact File location
+        for root, dirs, files in os.walk(directory):
             if name in files:
                 self.path = os.path.join(root, name)
-            else:
-                self.path = os.path.join(path, name)
+                break
 
         document_text = document_text_processor(name)
 
@@ -179,7 +178,10 @@ class document:
 
         # Safety net
         if name[:-4] != ".pdf":
-            name += ".pdf"
+            if self.name[:-4] != ".pdf":
+                name += ".pdf"
+
+        print(self.path, self.directory)
 
         os.rename(self.path, os.path.join(self.directory, name))
         self.name = name
