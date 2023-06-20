@@ -110,8 +110,7 @@ def find_company_name(text):
 
     # add a space between the words
     output_name = []
-
-    for index, word in enumerate(company_name):
+    for word in company_name:
         output_name.append(word)
         output_name.append(" ")
 
@@ -180,6 +179,7 @@ class document:
         if name[:-4] != ".pdf":
             if self.name[:-4] != ".pdf":
                 name += ".pdf"
+
 
         os.rename(self.path, os.path.join(self.directory, name))
         self.name = name
