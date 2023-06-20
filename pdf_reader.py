@@ -28,7 +28,7 @@ def document_text_processor(document_path):
     text = text.split()
 
     # we copy text for the error loop as we cannot edit strings as we use them
-    output_text = text.copy()[:200]
+    output_text = text.copy()[:300]
 
     # add errors to this list
     # use form (error, correction)
@@ -109,20 +109,16 @@ def find_company_name(text):
                         2: company_name_location_end]
 
     # add a space between the words
-
-    print(company_name)
-    output_name = [company_name[0]]
+    output_name = []
 
     for index, word in enumerate(company_name):
-        if index % 2 == 0:
-            output_name.append(" ")
+        output_name.append(word)
+        output_name.append(" ")
 
-        else:
-            output_name.append(word)
 
 
     # remove any white space and underscores
-    output_name = "".join(output_name)
+    output_name = "".join(output_name).strip()
     output_name = output_name.replace("_", "")
 
 

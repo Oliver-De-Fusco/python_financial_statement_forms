@@ -20,24 +20,19 @@ def expected_seqeunce(start, end):
     return expected
 
 
-def truncate_day(input):
+def truncate_day(date_input):
     """Returns just month and year of a datetime object.
 
-    Months have differnt ending days, February's last day is 28 while March's is 31
-    For the purpose of this script the day is irrelevant.
-
-    There are scenarios where a company may have the period end on the 1st of the next month
+    There are scenarios where a company may have the period end on the 1st instead of the 30th/31st
     to account for this we have to subtract a month to account for this decision.
-
-    IF THE FINAL SEQUENCE IS WRONG IT MAY BE BECUASE OF THIS FUNCTION!
-     
+    
     Check date ended on the documents and modify this function accordingly.
     """
 
-    if (input.day == 1) or (input.day == 2) or (input.day == 3):
-        input = input + relativedelta(months=-1)
+    if (date_input.day == 1) or (date_input.day == 2) or (date_input.day == 3):
+        date_input = date_input + relativedelta(months=-1)
 
-    return str(input)[:-3]
+    return str(date_input)[:-3]
 
 
 def truncate_day_generator(input_list):
