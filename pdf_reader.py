@@ -129,9 +129,9 @@ class document:
     def __init__(self, name, path=os.getcwd(), company=None, report_type=None, date=None):
         """Initialise the document object
 
-        Variables:
+        Input Variables:
         name        : Current filename of the document
-        path        : Where the file is located and is based on name.
+        path        : Full path of the document, excluding name when creating a document() object.
         company     : Can be set manually otherwise will be automatically found.
         report_type : Optional for manually setting the form type.
         date        : Optional for manually setting date of the object
@@ -189,18 +189,3 @@ class document:
             print(f"{self.name} -> {name}")
 
         return True
-
-    def move_file(self, destination_folder, log=False):
-        """Moves file to another location, used for folder creation"""
-
-        self.directory = destination_folder
-        os.rename(self.path, os.path.join(destination_folder, self.name))
-
-        if log:
-            print(f"{self.path} -> {os.path.join(destination_folder, self.name)}")
-
-    def __repr__(self) -> str:
-        return f"document(name={repr(self.name)}, date_ended={repr(self.date_ended)})"
-
-    def __str__(self) -> str:
-        return f"{self.name} - {self.report_type}"
