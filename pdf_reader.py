@@ -181,8 +181,6 @@ class document:
             if self.name[:-4] != ".pdf":
                 name += ".pdf"
 
-        print(self.path, self.directory)
-
         os.rename(self.path, os.path.join(self.directory, name))
         self.name = name
 
