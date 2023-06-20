@@ -179,8 +179,7 @@ class document:
 
         # Safety net
         if name[:-4] != ".pdf":
-            if self.name[:-4] != ".pdf":
-                name += ".pdf"
+            name += ".pdf"
 
         os.rename(self.path, os.path.join(self.directory, name))
         self.name = name
