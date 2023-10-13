@@ -123,29 +123,30 @@ def find_company_name(text):
 
     return " ".join(str(output_name).split()).strip()
 
+def find_report_type(text):
+    """Retuns report type"""
+
+    report_type = ("10-K", "10-Q")
+    for word in text:
+        if word in report_type:
+            return word
+    return None
 
 class document:
-    def __init__(self, name, directory=os.getcwd(), company=None, report_type=None, date=None):
+    verbose = False
+
+    def __init__(self, path, company=None, report_type=None, date=None):
         """Initialise the document object
 
         Variables:
-        name        : Current filename of the document
-        directory   : The current folder the pdf is in.
+        path        : Path of file
         company     : Can be set manually otherwise will be automatically found.
         report_type : Optional for manually setting the form type.
         date        : Optional for manually setting date of the object
         """
 
-        self.name = name
-        self.directory = directory
-
-        # Exact File location
-        for root, dirs, files in os.walk(directory):
-            if name in files:
-                self.path = os.path.join(root, name)
-                break
-
-        document_text = document_text_processor(name)
+        self.path = path
+        document_text = document_text_processor(self.path)
 
         # data
         if company:
@@ -163,16 +164,8 @@ class document:
         else:
             self.date_ended = find_quater_report(document_text)
 
-    def find_report_type(text):
-        """Retuns report type"""
 
-        report_type = ("10-K", "10-Q")
-        for word in text:
-            if word in report_type:
-                return word
-        return None
-
-    def set_name(self, name, log=False):
+    def set_name(self, name):
         """Renames the object"""
 
         # Safety net
@@ -181,10 +174,10 @@ class document:
                 name += ".pdf"
 
 
-        os.rename(self.path, os.path.join(self.directory, name))
+        os.rename(self.path, os.path.join(self.path, name))
         self.name = name
 
-        if log:
+        if document.verbose:
             print(f"{self.name} -> {name}")
 
         return True
