@@ -140,8 +140,5 @@ if __name__ == "__main__":
     # generator has to be able to cycle through a sequence
     generator = cycle(("Q4 - Annual Report", "Q1", "Q2", "Q3"))
 
-    # analyse
-    # analyse.analyse(report_list)
-
     # rename the files with the names
     rename_report_files(report_list, generator)
