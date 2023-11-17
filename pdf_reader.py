@@ -25,6 +25,7 @@ def document_text_processor(document_path):
     text = text.title()
     text = text.replace("  ", " ")
     text = text.replace(",", " ")
+    text = text.replace(".", "")
     text = text.split()
 
     # we copy text for the error loop as we cannot edit strings as we use them
@@ -85,7 +86,7 @@ def find_company_name(text):
 
     Becuase of this it is best to run a cleanup script after to fix the errors by replacing them with the actual name
 
-    If you already know the documents have the same company name this step can be skipped and the company name can be set manually
+    If you already know the documents have the same company name this step can be skipped and the company name can be set manually using the document class
     """
 
     company_name_location_start, company_name_location_end = 0, 0
@@ -102,11 +103,11 @@ def find_company_name(text):
             break
 
     if not (company_name_location_start and company_name_location_end):
-        return None
+
+        raise Exception(f"Cannot find name for {text}")
 
     # array of company name
-    company_name = text[company_name_location_start +
-                        2: company_name_location_end]
+    company_name = text[company_name_location_start-1 + 2:company_name_location_end]
 
     # add a space between the words
     output_name = []
@@ -119,6 +120,11 @@ def find_company_name(text):
     # remove any white space and underscores
     output_name = "".join(output_name).strip()
     output_name = output_name.replace("_", "")
+    output_name = output_name.title()
+
+    # remove prefix digits
+    # end_prefix = output_name.find("-") + 5
+    # output_name = output_name[end_prefix:]
 
 
     return " ".join(str(output_name).split()).strip()
@@ -157,7 +163,7 @@ class document:
         if report_type:
             self.report_type = report_type
         else:
-            self.report_type = document.find_report_type(document_text)
+            self.report_type = find_report_type(document_text)
 
         if date:
             self.date_ended = date
@@ -170,12 +176,9 @@ class document:
 
         # Safety net
         if name[:-4] != ".pdf":
-            if self.name[:-4] != ".pdf":
-                name += ".pdf"
+            name += ".pdf"
 
-
-        os.rename(self.path, os.path.join(self.path, name))
-        self.name = name
+        os.rename(self.path, name)
 
         if document.verbose:
             print(f"{self.name} -> {name}")

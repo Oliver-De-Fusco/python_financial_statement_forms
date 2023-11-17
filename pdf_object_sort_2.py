@@ -1,6 +1,6 @@
 import os
 from itertools import cycle
-
+import analyse
 from dateutil.relativedelta import *
 
 from pdf_reader import document
@@ -24,7 +24,7 @@ def truncate_day(date_input):
 
     There are scenarios where a company may have the period end on the 1st instead of the 30th/31st
     to account for this we have to subtract a month to account for this decision.
-    
+
     Check date ended on the documents and modify this function accordingly.
     """
 
@@ -48,19 +48,21 @@ def remove_duplicates(input_list):
     duplicates = []
 
     for report in input_list:
-        if truncate_day(report.date_ended) == truncate_day(output[-1].date_ended):
-            duplicates.append(report)
+        if (truncate_day(report.date_ended) == truncate_day(output[-1].date_ended)):
+            if report.company == output[-1].company:
+                duplicates.append(report)
         else:
             output.append(report)
 
-    return output, duplicates[1:]
+    return output[:-1], duplicates[1:]
 
 
 def fill_missing_gaps(input_list, expected_list, fill_value=None):
     """Returns a list based on the expected list where any missing dates are filled."""
 
     # we only care about comparing years and months so remove days
-    input_dates = list(truncate_day(report.date_ended) for report in input_list)
+    input_dates = list(truncate_day(report.date_ended)
+                       for report in input_list)
 
     # By comparing the expected vs actual
     # we know when to insert a new value into the original list by looping over it
@@ -68,7 +70,7 @@ def fill_missing_gaps(input_list, expected_list, fill_value=None):
         if not expected_date in input_dates:
             input_list.insert(index, fill_value)
 
-    return input_list
+    return input_list[:-1]
 
 
 def rename_report_files(input_files, generator):
@@ -99,7 +101,7 @@ def rename_report_files(input_files, generator):
             # print(f"{report.name} {report.report_type} ")
             report.set_name(
                 f"{report.company} - {report.date_ended.year} {next(generator)}")
-                
+
         else:
             next(generator)
 
@@ -122,8 +124,11 @@ if __name__ == "__main__":
     report_list, duplicates = remove_duplicates(report_list)
 
     # Handle duplicate reports
+    if not os.path.exists("duplicates"):
+        os.mkdir("duplicates")
+
     for dup in duplicates:
-        dup.set_name(f"Duplicate - {dup.name}")
+        dup.set_name(os.path.join("duplicates", dup.path))
 
     # we generate a list of the expected dates then remove the day from each using list comprehension
     expected_report_dates = list(truncate_day_generator(
@@ -133,7 +138,7 @@ if __name__ == "__main__":
     report_list = fill_missing_gaps(report_list, expected_report_dates)
 
     # generator has to be able to cycle through a sequence
-    generator = cycle(("Annual Report", "Q1", "Q2", "Q3"))
+    generator = cycle(("Q4 - Annual Report", "Q1", "Q2", "Q3"))
 
     # rename the files with the names
     rename_report_files(report_list, generator)

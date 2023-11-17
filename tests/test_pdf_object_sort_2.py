@@ -1,5 +1,10 @@
-import pdf_object_sort_2
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
+
 from datetime import date
+import pdf_object_sort_2
 
 
 class mock_report:
