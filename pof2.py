@@ -1,6 +1,5 @@
 import os
 from itertools import cycle
-import analyse
 from dateutil.relativedelta import *
 
 from pdf_reader import document
@@ -48,29 +47,32 @@ def remove_duplicates(input_list):
     duplicates = []
 
     for report in input_list:
-        if (truncate_day(report.date_ended) == truncate_day(output[-1].date_ended)):
-            if report.company == output[-1].company:
-                duplicates.append(report)
+        if truncate_day(report.date_ended) == truncate_day(output[-1].date_ended):
+            duplicates.append(report)
         else:
             output.append(report)
 
-    return output[:-1], duplicates[1:]
+    return output, duplicates[1:]
 
 
 def fill_missing_gaps(input_list, expected_list, fill_value=None):
     """Returns a list based on the expected list where any missing dates are filled."""
 
     # we only care about comparing years and months so remove days
-    input_dates = list(truncate_day(report.date_ended)
-                       for report in input_list)
+    input_dates = list(map(lambda x: x.date_ended, input_list))
 
-    # By comparing the expected vs actual
-    # we know when to insert a new value into the original list by looping over it
-    for index, expected_date in enumerate(expected_list):
-        if not expected_date in input_dates:
-            input_list.insert(index, fill_value)
+    output = []
 
-    return input_list[:-1]
+    # By checking if the current date is in the input list, insert none if it does not exist
+    index = 0
+    for expected_date in expected_list:
+        if expected_date in input_dates:
+            output.append(input_list[index])
+            index += 1
+        else:
+            output.append(None)
+    
+    return output
 
 
 def rename_report_files(input_files, generator):
@@ -87,11 +89,12 @@ def rename_report_files(input_files, generator):
     for index, report in enumerate(input_files):
         if report:
             if report.report_type == "10-K":
-                first_k_10 = index
+                first_10k = index
+    
 
     # prep the generator for the sequence
     # if you altered the length of the generator you need to change this as well
-    for _ in range(4*len(input_files) - first_k_10):
+    for _ in range(4*len(input_files) - first_10k):
         next(generator)
 
     for report in input_files:
