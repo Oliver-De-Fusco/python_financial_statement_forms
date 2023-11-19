@@ -59,13 +59,14 @@ def fill_missing_gaps(input_list, expected_list, fill_value=None):
     """Returns a list based on the expected list where any missing dates are filled."""
 
     # we only care about comparing years and months so remove days
-    input_dates = list(map(lambda x: x.date_ended, input_list))
+    input_dates = list(map(lambda x: truncate_day(x.date_ended), input_list))
+    expected_dates = list(map(lambda x: truncate_day(x), expected_list))
 
     output = []
 
     # By checking if the current date is in the input list, insert none if it does not exist
     index = 0
-    for expected_date in expected_list:
+    for expected_date in expected_dates:
         if expected_date in input_dates:
             output.append(input_list[index])
             index += 1
@@ -75,7 +76,7 @@ def fill_missing_gaps(input_list, expected_list, fill_value=None):
     return output
 
 
-def rename_report_files(input_files, generator):
+def rename_report_files(input_files, generator, suffix=True):
     """Renames the input files in a sequence based on the generator.
 
     generator has to be a generator function or list, I reccomend itertools.cycle().
@@ -86,27 +87,25 @@ def rename_report_files(input_files, generator):
     Change the value of 4 to the length of the generator or removing the loop if you want a sequence that increments infinitely.
     """
 
+    print(input_files)
+
     for index, report in enumerate(input_files):
         if report:
             if report.report_type == "10-K":
                 first_10k = index
-    
 
     # prep the generator for the sequence
     # if you altered the length of the generator you need to change this as well
-    for _ in range(4*len(input_files) - first_10k):
-        next(generator)
+    # for _ in range(4*len(input_files) - first_10k):
+        # next(generator)
+
 
     for report in input_files:
-        # Thanks to the fill_missing_gaps() generating the correct sequence is incredibly easy
+        report_type = next(generator)
         if report:
-
-            # print(f"{report.name} {report.report_type} ")
             report.set_name(
-                f"{report.company} - {report.date_ended.year} {next(generator)}")
-
-        else:
-            next(generator)
+                f"{report.company} - {report.date_ended.year} {report_type}")
+        
 
 
 # Code starts here
@@ -134,14 +133,13 @@ if __name__ == "__main__":
         dup.set_name(os.path.join("duplicates", dup.path))
 
     # we generate a list of the expected dates then remove the day from each using list comprehension
-    expected_report_dates = list(truncate_day_generator(
-        expected_seqeunce(report_list[0].date_ended, report_list[-1].date_ended)))
-
+    expected_report_dates = list(expected_seqeunce(report_list[0].date_ended, report_list[-1].date_ended))
+    
     # using the previously created variables we can fill in the gaps of the reports
     report_list = fill_missing_gaps(report_list, expected_report_dates)
 
     # generator has to be able to cycle through a sequence
-    generator = cycle(("Q4 - Annual Report", "Q1", "Q2", "Q3"))
+    generator = cycle(("Q1", "Q2", "Q3", "Q4"))
 
     # rename the files with the names
     rename_report_files(report_list, generator)

@@ -47,11 +47,3 @@ class Testfill_missing_gaps:
 
     def test_normal(self):
         assert pof2.fill_missing_gaps(Testfill_missing_gaps.input_list, Testfill_missing_gaps.expected_report_dates) == [Testfill_missing_gaps.input_list[0], None, Testfill_missing_gaps.input_list[1], Testfill_missing_gaps.input_list[2], None, Testfill_missing_gaps.input_list[3]]
-
-if __name__ == "__main__":
-
-    # print(Testfill_missing_gaps.test_normal(""))
-
-    """
-[Testfill_missing_gaps.input_list[0], None, Testfill_missing_gaps.input_list[1], Testfill_missing_gaps.input_list[2], None]
-[mock_report(date=date(2000-01-01), company=None), None, mock_report(date=date(2000-07-01), company=None), mock_report(date=date(2000-10-01), company=None), None]"""

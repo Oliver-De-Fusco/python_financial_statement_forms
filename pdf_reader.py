@@ -123,8 +123,8 @@ def find_company_name(text):
     output_name = output_name.title()
 
     # remove prefix digits
-    # end_prefix = output_name.find("-") + 5
-    # output_name = output_name[end_prefix:]
+    end_prefix = output_name.find("-") + 5
+    output_name = output_name[end_prefix+1:]
 
 
     return " ".join(str(output_name).split()).strip()
@@ -136,6 +136,7 @@ def find_report_type(text):
     for word in text:
         if word in report_type:
             return word
+        
     return None
 
 class document:
@@ -184,3 +185,6 @@ class document:
             print(f"{self.name} -> {name}")
 
         return True
+    
+    def __repr__(self) -> str:
+        return f"document({self.path}, company={self.company}, report_type={self.report_type}, date={self.date_ended})"
