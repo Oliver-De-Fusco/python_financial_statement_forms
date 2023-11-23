@@ -1,12 +1,12 @@
 import os
 from itertools import cycle
 from dateutil.relativedelta import *
-
 from pdf_reader import document
 
 
 def expected_seqeunce(start, end):
-    """Returns a sequence of datetime objects that increments by 3 months based on the start and end period."""
+    """Returns a sequence of datetime objects that increments by 3 months based on the start and end period.
+    """
 
     expected = [start]
 
@@ -33,15 +33,9 @@ def truncate_day(date_input):
     return str(date_input)[:-3]
 
 
-def truncate_day_generator(input_list):
-    """This is a helper function, see truncate_day()."""
-
-    for x in input_list:
-        yield truncate_day(x)
-
-
 def remove_duplicates(input_list):
-    """Removes objects with the same end date, discarding one and keeping the other."""
+    """Removes objects with the same end date, discarding one and keeping the other.
+    """
 
     output = [input_list[0]]
     duplicates = []
@@ -55,13 +49,13 @@ def remove_duplicates(input_list):
     return output, duplicates[1:]
 
 
-def fill_missing_gaps(input_list, expected_list, fill_value=None):
-    """Returns a list based on the expected list where any missing dates are filled."""
+def fill_missing_gaps(input_list, expected_list):
+    """Returns a list based on the expected list where any missing dates are filled.
+    """
 
     # we only care about comparing years and months so remove days
     input_dates = list(map(lambda x: truncate_day(x.date_ended), input_list))
-    expected_dates = list(map(lambda x: truncate_day(x), expected_list))
-
+    expected_dates = list(map(truncate_day, expected_list))
     output = []
 
     # By checking if the current date is in the input list, insert none if it does not exist
@@ -76,66 +70,49 @@ def fill_missing_gaps(input_list, expected_list, fill_value=None):
     return output
 
 
-def rename_report_files(input_files, generator, suffix=True):
+def rename_report_files(input_files, generator):
     """Renames the input files in a sequence based on the generator.
 
-    generator has to be a generator function or list, I reccomend itertools.cycle().
-    If the function has a differnt length than 4 then modify:
-
-    for _ in range(4 - first_k_10):
-
-    Change the value of 4 to the length of the generator or removing the loop if you want a sequence that increments infinitely.
+    Generator needs to be a generator function, use itertools.cycle().
     """
 
-    print(input_files)
-
-    for index, report in enumerate(input_files):
-        if report:
-            if report.report_type == "10-K":
-                first_10k = index
-
-    # prep the generator for the sequence
-    # if you altered the length of the generator you need to change this as well
-    # for _ in range(4*len(input_files) - first_10k):
-        # next(generator)
-
+    for x in input_files:
+        next(generator)
+        if x:
+            if x.report_type == "10-K":
+                break
 
     for report in input_files:
         report_type = next(generator)
         if report:
-            report.set_name(
-                f"{report.company} - {report.date_ended.year} {report_type}")
+            report.set_name(f"{report.company} - {report.date_ended.year} {report_type}")
         
 
-
-# Code starts here
-if __name__ == "__main__":
-
-    # get the pdf files in current directory
+def main():
+    # get the pdf files
     report_list = [document(filename) for filename in os.listdir(".")
                    if os.path.isfile(filename) if filename[-4:] == ".pdf"]
 
-    # remove files from list that data was not able to be found for
-    report_list = [report for report in report_list if (
-        report.company or report.date_ended or report.report_type)]
+    # remove files from list when no data was able to be found
+    report_list = [report for report in report_list if (report.company or report.date_ended or report.report_type)]
 
     # The list has to be sorted by date
     report_list.sort(key=lambda document: document.date_ended)
 
-    # Remove duplicates
+    # seperate duplicates
     report_list, duplicates = remove_duplicates(report_list)
 
-    # Handle duplicate reports
+    # Handle duplicates
     if not os.path.exists("duplicates"):
         os.mkdir("duplicates")
 
     for dup in duplicates:
         dup.set_name(os.path.join("duplicates", dup.path))
 
-    # we generate a list of the expected dates then remove the day from each using list comprehension
-    expected_report_dates = list(expected_seqeunce(report_list[0].date_ended, report_list[-1].date_ended))
+    # generate a list of the expected dates
+    expected_report_dates = expected_seqeunce(report_list[0].date_ended, report_list[-1].date_ended)
     
-    # using the previously created variables we can fill in the gaps of the reports
+    # fill in the date gaps in the reports
     report_list = fill_missing_gaps(report_list, expected_report_dates)
 
     # generator has to be able to cycle through a sequence
@@ -143,3 +120,7 @@ if __name__ == "__main__":
 
     # rename the files with the names
     rename_report_files(report_list, generator)
+
+if __name__ == "__main__":
+    main()
+    

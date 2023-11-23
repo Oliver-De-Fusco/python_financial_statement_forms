@@ -123,9 +123,9 @@ def find_company_name(text):
     output_name = output_name.title()
 
     # remove prefix digits
-    end_prefix = output_name.find("-") + 5
-    output_name = output_name[end_prefix+1:]
-
+    end_prefix = output_name.find("-")
+    if end_prefix != -1:
+        output_name = output_name[end_prefix+6:]
 
     return " ".join(str(output_name).split()).strip()
 
@@ -140,7 +140,7 @@ def find_report_type(text):
     return None
 
 class document:
-    verbose = False
+    verbose = True
 
     def __init__(self, path, company=None, report_type=None, date=None):
         """Initialise the document object
@@ -172,17 +172,19 @@ class document:
             self.date_ended = find_quater_report(document_text)
 
 
-    def set_name(self, name):
+    def set_name(self, destination):
         """Renames the object"""
 
         # Safety net
-        if name[:-4] != ".pdf":
-            name += ".pdf"
+        if destination[-4:] != ".pdf":
+            destination += ".pdf"
 
-        os.rename(self.path, name)
+        os.rename(self.path, destination)
+
+        self.path = destination
 
         if document.verbose:
-            print(f"{self.name} -> {name}")
+            print(f"{self.path} -> {destination}")
 
         return True
     
